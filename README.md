@@ -1,14 +1,14 @@
 # Albertool Constructor
 
-Gera construtores, getters, setters e interfaces direto no VSCode — sem digitar na raça.
+Generates constructors, getters, setters and interfaces directly in VSCode — no more typing boilerplate by hand.
 
-Inspirado no fluxo do NetBeans/IntelliJ: você declara os campos, a extensão faz o resto.
+Inspired by the NetBeans/IntelliJ Alt+Insert flow: you declare the fields, the extension does the rest.
 
 ---
 
-## Linguagens suportadas
+## Supported languages
 
-| Linguagem | Extensão |
+| Language | Extension |
 |---|---|
 | TypeScript | `.ts` |
 | JavaScript | `.js` |
@@ -18,15 +18,15 @@ Inspirado no fluxo do NetBeans/IntelliJ: você declara os campos, a extensão fa
 
 ---
 
-## Como usar
+## How to use
 
-1. Abra um arquivo com uma classe que já tenha os campos declarados
-2. Rode o comando `Albertool: Build Class` (`Ctrl+Shift+P` → buscar por "Albertool")
-3. Selecione o que deseja gerar e confirme
+1. Open a file with a class that already has its fields declared
+2. Run the command `Albertool: Build Class` (`Ctrl+Shift+P` → search for "Albertool")
+3. Select what you want to generate and confirm
 
 ```
-🏗️ Construtor vazio      → para reflexão (TypeORM, Doctrine, EF, SQLAlchemy...)
-🏗️ Construtor completo   → inicializa todos os campos
+🏗️ Empty constructor     → for reflection (TypeORM, Doctrine, EF, SQLAlchemy...)
+🏗️ Full constructor      → initializes all fields
 🔧 Getters
 🔧 Setters
 📦 Interface
@@ -34,9 +34,9 @@ Inspirado no fluxo do NetBeans/IntelliJ: você declara os campos, a extensão fa
 
 ---
 
-## Exemplo
+## Example
 
-**Entrada — declare os campos antes de rodar:**
+**Input — declare the fields before running:**
 
 ```typescript
 export class User {
@@ -47,7 +47,7 @@ export class User {
 }
 ```
 
-**Saída — selecione tudo:**
+**Output — select all options:**
 
 ```typescript
 export interface IUser {
@@ -64,14 +64,14 @@ export class User {
     private ativo: boolean;
 
     /**
-     * Construtor padrão para reflexão.
-     * Usado pelo TypeORM e outros frameworks para instanciar a entidade.
+     * Default constructor for reflection.
+     * Used by TypeORM and other frameworks to instantiate the entity.
      */
     constructor() {}
 
     /**
-     * Construtor completo.
-     * Use para criar instâncias com todos os campos já preenchidos.
+     * Full constructor.
+     * Use to create instances with all fields already populated.
      */
     constructor(id?: number, nome?: string, email?: string, ativo?: boolean) {
         if (id !== undefined) this.id = id;
@@ -94,25 +94,25 @@ export class User {
 
 ---
 
-## Construtores e reflexão
+## Constructors and reflection
 
-Ao selecionar **ambos os construtores**, cada linguagem segue o padrão do seu ecossistema:
+When selecting **both constructors**, each language follows the standard of its ecosystem:
 
-| Linguagem | Estratégia |
+| Language | Strategy |
 |---|---|
-| TypeScript | Overload com parâmetros opcionais |
-| JavaScript | Parâmetros com `= undefined` |
-| PHP | Dois `__construct` — o vazio para o Doctrine, o cheio para uso manual |
-| C# | Dois construtores separados — padrão nativo do C# |
-| Python | `__init__` vazio + `@classmethod create()` como factory method |
+| TypeScript | Overload with optional parameters |
+| JavaScript | Parameters with `= undefined` |
+| PHP | Two `__construct` — empty one for Doctrine, full one for manual use |
+| C# | Two separate constructors — native C# pattern |
+| Python | Empty `__init__` + `@classmethod create()` as factory method |
 
 ---
 
-## Inferência de tipos
+## Type inference
 
-A extensão infere o tipo pelo nome do campo automaticamente:
+The extension infers the type from the field name automatically:
 
-| Nome contém | Tipo inferido |
+| Name contains | Inferred type |
 |---|---|
 | `id` | `int` / `number` |
 | `nome`, `name` | `string` / `str` |
@@ -120,30 +120,30 @@ A extensão infere o tipo pelo nome do campo automaticamente:
 | `ativo`, `active` | `bool` / `boolean` |
 | `preco`, `price` | `float` / `number` / `double` |
 | `data`, `date` | `Date` / `DateTime` |
-| outros | `any` / `mixed` / `object` |
+| others | `any` / `mixed` / `object` |
 
 ---
 
-## Aviso importante
+## Important notice
 
-> ⚠️ **JavaScript não suporta interfaces nativamente.**
-> Se selecionar Interface em um arquivo `.js`, a extensão vai avisar e ignorar essa opção.
-> Use TypeScript para geração de interfaces.
-
----
-
-## Filosofia
-
-Feito de dev pra dev. Sem configuração, sem wizard, sem opinião sobre sua arquitetura — só estrutura, a lógica é sua.
+> ⚠️ **JavaScript does not support interfaces natively.**
+> If you select Interface on a `.js` file, the extension will warn you and ignore that option.
+> Use TypeScript for interface generation.
 
 ---
 
-## Parte do ecossistema Albertool
+## Philosophy
 
-- [Albertool DevKit](https://github.com/seu-usuario/albertool-devkit) — boilerplate de projetos
+Built by devs, for devs. No configuration, no wizard, no opinion about your architecture — just structure, the logic is yours.
 
 ---
 
-## Licença
+## Part of the Albertool ecosystem
+
+- [Albertool DocGen](https://github.com/SidneiAJr/albertool-docgen) — automatic documentation generator for backend projects
+
+---
+
+## License
 
 MIT
