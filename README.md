@@ -21,7 +21,7 @@ Inspired by the NetBeans/IntelliJ Alt+Insert flow: you declare the fields, the e
 ## How to use
 
 1. Open a file with a class that already has its fields declared
-2. Run the command `Albertool: Build Class` (`Ctrl+Shift+P` → search for "Albertool")
+2. `Ctrl+Shift+P` → search for **"Albertool: Build Class"** — or use `Alt+Insert`
 3. Select what you want to generate and confirm
 
 ```
