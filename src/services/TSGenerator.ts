@@ -14,8 +14,8 @@ export class TSGenerator {
         }
         code += '\n';
 
-        // Construtor vazio — para frameworks de reflexão (TypeORM, etc.)
-        if (generateConstructor === 'empty' || generateConstructor === 'both') {
+        // Construtor vazio
+        if (generateConstructor === 'empty') {
             code += `    /**\n`;
             code += `     * Construtor padrão para reflexão.\n`;
             code += `     * Usado pelo TypeORM e outros frameworks para instanciar a entidade.\n`;
@@ -23,17 +23,38 @@ export class TSGenerator {
             code += `    constructor() {}\n\n`;
         }
 
-        // Construtor completo — inicializa todos os campos
-        if (generateConstructor === 'full' || generateConstructor === 'both') {
+        // Construtor completo
+        if (generateConstructor === 'full') {
+            const params = validProperties
+                .map(p => `${p.name}?: ${this.inferirTipo(p.name)}`)
+                .join(', ');
+
             code += `    /**\n`;
             code += `     * Construtor completo.\n`;
             code += `     * Use para criar instâncias com todos os campos já preenchidos.\n`;
             code += `     */\n`;
+            code += `    constructor(${params}) {\n`;
+            for (const prop of validProperties) {
+                code += `        if (${prop.name} !== undefined) this.${prop.name} = ${prop.name};\n`;
+            }
+            code += `    }\n\n`;
+        }
 
-            // TS não suporta dois construtores — usa overload com params opcionais
-            const params = validProperties.map(p => `${p.name}?: ${this.inferirTipo(p.name)}`);
-            code += `    constructor(${params.join(', ')});\n`;
-            code += `    constructor(${validProperties.map(p => `${p.name}?: ${this.inferirTipo(p.name)}`).join(', ')}) {\n`;
+        // Ambos — vazio + overload + completo
+        if (generateConstructor === 'both') {
+            const params = validProperties
+                .map(p => `${p.name}?: ${this.inferirTipo(p.name)}`)
+                .join(', ');
+
+            code += `    /**\n`;
+            code += `     * Construtor padrão para reflexão.\n`;
+            code += `     */\n`;
+            code += `    constructor();\n`;
+            code += `    /**\n`;
+            code += `     * Construtor completo.\n`;
+            code += `     */\n`;
+            code += `    constructor(${params});\n`;
+            code += `    constructor(${params}) {\n`;
             for (const prop of validProperties) {
                 code += `        if (${prop.name} !== undefined) this.${prop.name} = ${prop.name};\n`;
             }
@@ -58,12 +79,13 @@ export class TSGenerator {
             }
         }
 
+        code += `}\n`;
+
+        // Interface no final — evita o export export
         if (generateInterface) {
-            const interfaceCode = this.generateInterface(className, validProperties);
-            code = interfaceCode + '\n' + code;
+            code += '\n' + this.generateInterface(className, validProperties);
         }
 
-        code += `}\n`;
         return code;
     }
 

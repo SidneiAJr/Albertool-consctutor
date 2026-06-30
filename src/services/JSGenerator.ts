@@ -5,46 +5,60 @@ export class JSGenerator {
     generate(options: GeneratorOptions): string {
         const { className, properties, generateConstructor, generateGetters, generateSetters, generateInterface } = options;
 
-        // JS não tem interface nativa
         if (generateInterface) {
             vscode.window.showWarningMessage(
                 '⚠️ JavaScript não suporta interfaces nativamente. Use TypeScript para isso.'
             );
         }
 
+        const validProperties = properties.filter(p =>
+            p.name && p.name.length > 1 && !p.name.startsWith('_')
+        );
+
         let code = `class ${className} {\n`;
 
-        // Campos declarados no topo
-        for (const prop of properties) {
+        for (const prop of validProperties) {
             code += `    ${prop.name};\n`;
         }
         code += '\n';
 
-        // Construtor vazio — para frameworks de reflexão
-        if (generateConstructor === 'empty' || generateConstructor === 'both') {
+        // Construtor vazio
+        if (generateConstructor === 'empty') {
             code += `    /**\n`;
             code += `     * Construtor padrão para reflexão.\n`;
-            code += `     * Usado por frameworks que instanciam a classe antes de popular os campos.\n`;
             code += `     */\n`;
             code += `    constructor() {}\n\n`;
         }
 
-        // Construtor completo — inicializa todos os campos
-        if (generateConstructor === 'full' || generateConstructor === 'both') {
+        // Construtor completo
+        if (generateConstructor === 'full') {
+            const params = validProperties.map(p => `${p.name} = undefined`).join(', ');
             code += `    /**\n`;
             code += `     * Construtor completo.\n`;
-            code += `     * Use para criar instâncias com todos os campos já preenchidos.\n`;
             code += `     */\n`;
-            const params = properties.map(p => `${p.name} = undefined`);
-            code += `    constructor(${params.join(', ')}) {\n`;
-            for (const prop of properties) {
+            code += `    constructor(${params}) {\n`;
+            for (const prop of validProperties) {
                 code += `        this.${prop.name} = ${prop.name};\n`;
             }
             code += `    }\n\n`;
         }
 
+        // Ambos — JS não tem overload, usa params opcionais com undefined
+        if (generateConstructor === 'both') {
+            const params = validProperties.map(p => `${p.name} = undefined`).join(', ');
+            code += `    /**\n`;
+            code += `     * Construtor unificado (vazio ou completo via params opcionais).\n`;
+            code += `     * JS não suporta sobrecarga — use sem args para construtor vazio.\n`;
+            code += `     */\n`;
+            code += `    constructor(${params}) {\n`;
+            for (const prop of validProperties) {
+                code += `        if (${prop.name} !== undefined) this.${prop.name} = ${prop.name};\n`;
+            }
+            code += `    }\n\n`;
+        }
+
         if (generateGetters) {
-            for (const prop of properties) {
+            for (const prop of validProperties) {
                 code += `    get${capitalize(prop.name)}() {\n`;
                 code += `        return this.${prop.name};\n`;
                 code += `    }\n\n`;
@@ -52,7 +66,7 @@ export class JSGenerator {
         }
 
         if (generateSetters) {
-            for (const prop of properties) {
+            for (const prop of validProperties) {
                 code += `    set${capitalize(prop.name)}(value) {\n`;
                 code += `        this.${prop.name} = value;\n`;
                 code += `    }\n\n`;

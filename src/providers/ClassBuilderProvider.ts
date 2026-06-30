@@ -8,11 +8,11 @@ import { PYGenerator } from '../services/PYGenerator';
 
 export class ClassBuilderProvider {
     private generators = {
-        php: new PhpGenerator(),
+        php:        new PhpGenerator(),
         typescript: new TSGenerator(),
         javascript: new JSGenerator(),
-        csharp: new CsharpGenerator(),
-        python: new PYGenerator()
+        csharp:     new CsharpGenerator(),
+        python:     new PYGenerator()
     };
 
     async build(): Promise<void> {
@@ -59,12 +59,12 @@ export class ClassBuilderProvider {
     private detectLanguage(fileName: string): string | null {
         const ext = fileName.split('.').pop();
         switch (ext) {
-            case 'php':  return 'php';
-            case 'ts':   return 'typescript';
-            case 'js':   return 'javascript';
-            case 'cs':   return 'csharp';
-            case 'py':   return 'python';
-            default:     return null;
+            case 'php': return 'php';
+            case 'ts':  return 'typescript';
+            case 'js':  return 'javascript';
+            case 'cs':  return 'csharp';
+            case 'py':  return 'python';
+            default:    return null;
         }
     }
 
@@ -93,7 +93,6 @@ export class ClassBuilderProvider {
 
         const className = match[1];
         const body = match[2] || '';
-
         const properties = this.extractProperties(body, language);
         return { name: className, properties };
     }
@@ -190,11 +189,11 @@ export class ClassBuilderProvider {
 
     private async showOptions(classInfo: ClassInfo): Promise<GeneratorOptions | null> {
         const items = [
-            { label: '🏗️ Construtor vazio',     description: 'Para reflexão (TypeORM, Doctrine, EF...)', value: 'constructor-empty' },
-            { label: '🏗️ Construtor completo',  description: 'Inicializa todos os campos',               value: 'constructor-full' },
-            { label: '🔧 Getters',               description: '',                                          value: 'getters' },
-            { label: '🔧 Setters',               description: '',                                          value: 'setters' },
-            { label: '📦 Interface',             description: '',                                          value: 'interface' },
+            { label: '🏗️ Construtor vazio',    description: 'Para reflexão (TypeORM, Doctrine, EF...)', value: 'constructor-empty' },
+            { label: '🏗️ Construtor completo', description: 'Inicializa todos os campos',               value: 'constructor-full' },
+            { label: '🔧 Getters',              description: '',                                          value: 'getters' },
+            { label: '🔧 Setters',              description: '',                                          value: 'setters' },
+            { label: '📦 Interface',            description: '',                                          value: 'interface' },
         ];
 
         const selected = await vscode.window.showQuickPick(items, {
@@ -208,16 +207,16 @@ export class ClassBuilderProvider {
         const wantsFull  = selected.some(s => s.value === 'constructor-full');
 
         return {
-            className: classInfo.name,
-            properties: classInfo.properties,
+            className:          classInfo.name,
+            properties:         classInfo.properties,
             generateConstructor: wantsEmpty && wantsFull ? 'both'
                                : wantsEmpty              ? 'empty'
                                : wantsFull               ? 'full'
                                : 'none',
-            generateGetters:   selected.some(s => s.value === 'getters'),
-            generateSetters:   selected.some(s => s.value === 'setters'),
-            generateInterface: selected.some(s => s.value === 'interface'),
-            generateToString:  false,
+            generateGetters:    selected.some(s => s.value === 'getters'),
+            generateSetters:    selected.some(s => s.value === 'setters'),
+            generateInterface:  selected.some(s => s.value === 'interface'),
+            generateToString:   false,
             generateRepository: false
         };
     }
@@ -228,8 +227,11 @@ export class ClassBuilderProvider {
         classInfo: ClassInfo,
         newCode: string
     ): Promise<void> {
-        // Captura modificadores opcionais antes de class (public, abstract, etc.)
-        const regex = new RegExp(`(?:(?:public|private|protected|internal)\\s+)*(?:abstract\\s+)?class\\s+${classInfo.name}\\s*\\{([\\s\\S]*?)\\n\\}`, 'g');
+        // ← export\s+ adicionado — captura tanto class quanto export class
+        const regex = new RegExp(
+            `(?:export\\s+)?(?:(?:public|private|protected|internal)\\s+)*(?:abstract\\s+)?class\\s+${classInfo.name}\\s*\\{([\\s\\S]*?)\\n\\}`,
+            'g'
+        );
         const match = regex.exec(text);
 
         if (!match) {

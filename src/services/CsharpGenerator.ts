@@ -4,16 +4,20 @@ export class CsharpGenerator {
     generate(options: GeneratorOptions): string {
         const { className, properties, generateConstructor, generateGetters, generateSetters, generateInterface } = options;
 
+        const validProperties = properties.filter(p =>
+            p.name && p.name.length > 1 && !p.name.startsWith('_')
+        );
+
         let code = `public class ${className} {\n`;
 
-        for (const prop of properties) {
+        for (const prop of validProperties) {
             const type = this.inferirTipo(prop.name);
             code += `    private ${type} _${prop.name};\n`;
         }
         code += '\n';
 
-        // Construtor vazio — para frameworks de reflexão (Entity Framework, etc.)
-        if (generateConstructor === 'empty' || generateConstructor === 'both') {
+        // Construtor vazio
+        if (generateConstructor === 'empty') {
             code += `    /// <summary>\n`;
             code += `    /// Construtor padrão para reflexão.\n`;
             code += `    /// Usado pelo Entity Framework e outros ORMs para instanciar a entidade.\n`;
@@ -21,22 +25,38 @@ export class CsharpGenerator {
             code += `    public ${className}() {}\n\n`;
         }
 
-        // Construtor completo — inicializa todos os campos
-        if (generateConstructor === 'full' || generateConstructor === 'both') {
+        // Construtor completo
+        if (generateConstructor === 'full') {
+            const params = validProperties
+                .map(p => `${this.inferirTipo(p.name)} ${p.name}`)
+                .join(', ');
             code += `    /// <summary>\n`;
             code += `    /// Construtor completo.\n`;
-            code += `    /// Use para criar instâncias com todos os campos já preenchidos.\n`;
             code += `    /// </summary>\n`;
-            const params = properties.map(p => `${this.inferirTipo(p.name)} ${p.name}`);
-            code += `    public ${className}(${params.join(', ')}) {\n`;
-            for (const prop of properties) {
+            code += `    public ${className}(${params}) {\n`;
+            for (const prop of validProperties) {
+                code += `        _${prop.name} = ${prop.name};\n`;
+            }
+            code += `    }\n\n`;
+        }
+
+        // Ambos — C# suporta sobrecarga real
+        if (generateConstructor === 'both') {
+            const params = validProperties
+                .map(p => `${this.inferirTipo(p.name)} ${p.name}`)
+                .join(', ');
+            code += `    /// <summary>Construtor padrão para reflexão.</summary>\n`;
+            code += `    public ${className}() {}\n\n`;
+            code += `    /// <summary>Construtor completo.</summary>\n`;
+            code += `    public ${className}(${params}) {\n`;
+            for (const prop of validProperties) {
                 code += `        _${prop.name} = ${prop.name};\n`;
             }
             code += `    }\n\n`;
         }
 
         if (generateGetters) {
-            for (const prop of properties) {
+            for (const prop of validProperties) {
                 const type = this.inferirTipo(prop.name);
                 code += `    public ${type} Get${capitalize(prop.name)}() {\n`;
                 code += `        return _${prop.name};\n`;
@@ -45,7 +65,7 @@ export class CsharpGenerator {
         }
 
         if (generateSetters) {
-            for (const prop of properties) {
+            for (const prop of validProperties) {
                 const type = this.inferirTipo(prop.name);
                 code += `    public void Set${capitalize(prop.name)}(${type} value) {\n`;
                 code += `        _${prop.name} = value;\n`;
@@ -53,12 +73,13 @@ export class CsharpGenerator {
             }
         }
 
+        code += `}\n`;
+
+        // Interface no final
         if (generateInterface) {
-            const interfaceCode = this.generateInterface(className, properties);
-            code = interfaceCode + '\n' + code;
+            code += '\n' + this.generateInterface(className, validProperties);
         }
 
-        code += `}\n`;
         return code;
     }
 

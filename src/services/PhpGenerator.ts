@@ -9,7 +9,7 @@ export class PhpGenerator {
             type: this.inferirTipo(prop.name)
         }));
 
-        let code = `class ${className} {\n`;
+        let code = `<?php\n\nclass ${className} {\n`;
 
         for (const prop of typedProperties) {
             const type = this.mapType(prop.type);
@@ -17,8 +17,8 @@ export class PhpGenerator {
         }
         code += '\n';
 
-        // Construtor vazio — para frameworks de reflexão (Doctrine, Laravel Eloquent, etc.)
-        if (generateConstructor === 'empty' || generateConstructor === 'both') {
+        // Construtor vazio
+        if (generateConstructor === 'empty') {
             code += `    /**\n`;
             code += `     * Construtor padrão para reflexão.\n`;
             code += `     * Usado pelo Doctrine e outros ORMs para instanciar a entidade.\n`;
@@ -26,16 +26,33 @@ export class PhpGenerator {
             code += `    public function __construct() {}\n\n`;
         }
 
-        // Construtor completo — inicializa todos os campos
-        if (generateConstructor === 'full' || generateConstructor === 'both') {
+        // Construtor completo
+        if (generateConstructor === 'full') {
+            const params = typedProperties
+                .map(p => `${this.mapType(p.type)} $${p.name}`)
+                .join(', ');
             code += `    /**\n`;
             code += `     * Construtor completo.\n`;
-            code += `     * Use para criar instâncias com todos os campos já preenchidos.\n`;
             code += `     */\n`;
-            const params = typedProperties.map(p => `${this.mapType(p.type)} $${p.name}`);
-            code += `    public function __construct(${params.join(', ')}) {\n`;
+            code += `    public function __construct(${params}) {\n`;
             for (const prop of typedProperties) {
                 code += `        $this->${prop.name} = $${prop.name};\n`;
+            }
+            code += `    }\n\n`;
+        }
+
+        // Ambos — PHP não suporta overload, usa params com null default
+        if (generateConstructor === 'both') {
+            const params = typedProperties
+                .map(p => `?${this.mapType(p.type)} $${p.name} = null`)
+                .join(', ');
+            code += `    /**\n`;
+            code += `     * Construtor unificado (vazio ou completo via params opcionais).\n`;
+            code += `     * PHP não suporta sobrecarga — use sem args para construtor vazio.\n`;
+            code += `     */\n`;
+            code += `    public function __construct(${params}) {\n`;
+            for (const prop of typedProperties) {
+                code += `        if ($${prop.name} !== null) $this->${prop.name} = $${prop.name};\n`;
             }
             code += `    }\n\n`;
         }
@@ -58,16 +75,17 @@ export class PhpGenerator {
             }
         }
 
+        code += `}\n`;
+
+        // Interface no final — evita duplicar <?php
         if (generateInterface) {
-            const interfaceCode = this.generateInterface(className, typedProperties);
-            code = interfaceCode + '\n' + code;
+            code += '\n' + this.generateInterface(className, typedProperties);
         }
 
-        code += `}\n`;
         return code;
     }
 
-    private generateInterface(className: string, properties: Property[]): string {
+    private generateInterface(className: string, properties: any[]): string {
         let code = `interface ${className}Interface {\n`;
         for (const prop of properties) {
             const type = this.mapType(prop.type);
@@ -79,13 +97,13 @@ export class PhpGenerator {
     }
 
     private inferirTipo(nome: string): string {
-        if (nome.includes('id'))                         return 'int';
-        if (nome.includes('nome') || nome.includes('name'))    return 'string';
-        if (nome.includes('email'))                      return 'string';
+        if (nome.includes('id'))                               return 'int';
+        if (nome.includes('nome') || nome.includes('name'))   return 'string';
+        if (nome.includes('email'))                           return 'string';
         if (nome.includes('senha') || nome.includes('password')) return 'string';
-        if (nome.includes('ativo') || nome.includes('active'))  return 'bool';
-        if (nome.includes('preco') || nome.includes('price'))   return 'float';
-        if (nome.includes('data') || nome.includes('date'))     return 'string';
+        if (nome.includes('ativo') || nome.includes('active')) return 'bool';
+        if (nome.includes('preco') || nome.includes('price')) return 'float';
+        if (nome.includes('data') || nome.includes('date'))   return 'string';
         return 'mixed';
     }
 
