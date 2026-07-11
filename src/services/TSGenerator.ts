@@ -10,7 +10,7 @@ export class TSGenerator {
 
         for (const prop of validProperties) {
             const type = this.inferirTipo(prop.name);
-            code += `    private ${prop.name}: ${type};\n`;
+            code += `    private ${prop.name}!: ${type};\n`;
         }
         code += '\n';
 
@@ -35,7 +35,7 @@ export class TSGenerator {
             code += `     */\n`;
             code += `    constructor(${params}) {\n`;
             for (const prop of validProperties) {
-                code += `        if (${prop.name} !== undefined) this.${prop.name} = ${prop.name};\n`;
+                code += `        this.${prop.name} = ${prop.name}!;\n`;
             }
             code += `    }\n\n`;
         }
@@ -56,7 +56,7 @@ export class TSGenerator {
             code += `    constructor(${params});\n`;
             code += `    constructor(${params}) {\n`;
             for (const prop of validProperties) {
-                code += `        if (${prop.name} !== undefined) this.${prop.name} = ${prop.name};\n`;
+                code += `        this.${prop.name} = ${prop.name}!;\n`;
             }
             code += `    }\n\n`;
         }
@@ -81,7 +81,6 @@ export class TSGenerator {
 
         code += `}\n`;
 
-        // Interface no final — evita o export export
         if (generateInterface) {
             code += '\n' + this.generateInterface(className, validProperties);
         }

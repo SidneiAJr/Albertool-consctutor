@@ -2,7 +2,7 @@
   "name": "albertool-class-builder",
   "displayName": "Albertool Class Builder",
   "description": "🏗️ Gerador de getters, setters, construtores e interfaces para PHP, TS, JS, C# e Python",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "SidAlbertaodasmassa",
   "engines": {
     "vscode": "^1.85.0"
